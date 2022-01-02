@@ -1,7 +1,8 @@
+
 #[derive(Copy, Clone, Debug)]
 struct Losses {
-    defender: u8,
-    attacker: u8
+    defender: u32,
+    attacker: u32
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -21,30 +22,46 @@ impl Dice {
     }
 }
 
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+enum Strategy {
+    WithThree,
+    WithTwo,
+    WithOne
+}
+
 #[derive(Copy, Clone, Debug)]
 enum Attack {
-    WITH_THREE(Dice, Dice, Dice),
-    WITH_TWO(Dice, Dice),
-    WITH_ONE(Dice)
+    WithThree(Dice, Dice, Dice),
+    WithTwo(Dice, Dice),
+    WithOne(Dice)
 }
 
 impl Attack {
+    fn strategy(&self) -> Strategy {
+        match self {
+            &Self::WithOne(_) => Strategy::WithOne,
+            &Self::WithTwo(_, _) => Strategy::WithTwo,
+            &Self::WithThree(_, _, _) => Strategy::WithThree
+        }
+    }
+
     fn all() -> Vec<Attack> {
         use Attack::*;
         let mut variations = vec![];        
         for first_dice in Dice::all().iter() {
-            variations.push(WITH_ONE(*first_dice));
+            variations.push(WithOne(*first_dice));
             for second_dice in Dice::all().iter() {
                 if first_dice >= second_dice {
-                    variations.push(WITH_TWO(*first_dice, *second_dice));
+                    variations.push(WithTwo(*first_dice, *second_dice));
                 }
                 else {
-                    variations.push(WITH_TWO(*second_dice, *first_dice));
+                    variations.push(WithTwo(*second_dice, *first_dice));
                 }
                 for third_dice in Dice::all().iter() {
                     let mut all = vec![*first_dice, *second_dice, *third_dice];
                     all.sort();
-                    variations.push(WITH_THREE(all[0], all[1], all[2]));
+                    all.reverse();
+                    variations.push(WithThree(all[0], all[1], all[2]));
                 }
             }    
         }
@@ -54,22 +71,29 @@ impl Attack {
 
 #[derive(Copy, Clone, Debug)]
 enum Defend {
-    WITH_TWO(Dice, Dice),
-    WITH_ONE(Dice)
+    WithTwo(Dice, Dice),
+    WithOne(Dice)
 }
 
 impl Defend {
+    fn strategy(&self) -> Strategy {
+        match self {
+            &Self::WithOne(_) => Strategy::WithOne,
+            &Self::WithTwo(_, _) => Strategy::WithTwo
+        }
+    }
+
     fn all() -> Vec<Defend> {
         use Defend::*;
         let mut variations = vec![];        
         for first_dice in Dice::all().iter() {
-            variations.push(WITH_ONE(*first_dice));
+            variations.push(WithOne(*first_dice));
             for second_dice in Dice::all().iter() {
                 if first_dice >= second_dice {
-                    variations.push(WITH_TWO(*first_dice, *second_dice));
+                    variations.push(WithTwo(*first_dice, *second_dice));
                 }
                 else {
-                    variations.push(WITH_TWO(*second_dice, *first_dice));
+                    variations.push(WithTwo(*second_dice, *first_dice));
                 }
             }    
         }
@@ -79,8 +103,8 @@ impl Defend {
 
 fn decide(attack: Attack, defend: Defend) -> Losses {
     match defend {
-        Defend::WITH_ONE(defend_highest) => match attack {
-            Attack::WITH_ONE(attack_highest) => {
+        Defend::WithOne(defend_highest) => match attack {
+            Attack::WithOne(attack_highest) => {
                 if defend_highest >= attack_highest {
                     Losses {
                         defender: 0,
@@ -94,7 +118,7 @@ fn decide(attack: Attack, defend: Defend) -> Losses {
                     }
                 }
             },
-            Attack::WITH_TWO(attack_highest, _) => {
+            Attack::WithTwo(attack_highest, _) => {
                 if defend_highest >= attack_highest {
                     Losses {
                         defender: 0,
@@ -108,7 +132,7 @@ fn decide(attack: Attack, defend: Defend) -> Losses {
                     }
                 }
             },
-            Attack::WITH_THREE(attack_highest, _, _) => {
+            Attack::WithThree(attack_highest, _, _) => {
                 if defend_highest >= attack_highest {
                     Losses {
                         defender: 0,
@@ -123,8 +147,8 @@ fn decide(attack: Attack, defend: Defend) -> Losses {
                 }
             }
         },
-        Defend::WITH_TWO(defend_highest, defend_second_highest) => match attack {
-            Attack::WITH_ONE(attack_highest) => {
+        Defend::WithTwo(defend_highest, defend_second_highest) => match attack {
+            Attack::WithOne(attack_highest) => {
                 if defend_highest >= attack_highest {
                     Losses {
                         defender: 0,
@@ -138,9 +162,9 @@ fn decide(attack: Attack, defend: Defend) -> Losses {
                     }
                 }
             },
-            Attack::WITH_TWO(attack_highest, attack_second_highest) => {
-                let mut attacker : u8 = 0;
-                let mut defender : u8 = 0;
+            Attack::WithTwo(attack_highest, attack_second_highest) => {
+                let mut attacker = 0;
+                let mut defender = 0;
                 if defend_highest >= attack_highest {
                     attacker += 1;    
                 }
@@ -158,9 +182,9 @@ fn decide(attack: Attack, defend: Defend) -> Losses {
                     defender
                 }
             },
-            Attack::WITH_THREE(attack_highest, attack_second_highest, _) => {
-                let mut attacker : u8 = 0;
-                let mut defender : u8 = 0;
+            Attack::WithThree(attack_highest, attack_second_highest, _) => {
+                let mut attacker = 0;
+                let mut defender = 0;
                 if defend_highest >= attack_highest {
                     attacker += 1;    
                 }
@@ -182,11 +206,79 @@ fn decide(attack: Attack, defend: Defend) -> Losses {
     }
 }
 
+#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+struct StrategySummary {
+    attack: Strategy,
+    defend: Strategy
+}
+
+impl StrategySummary {
+    fn new(attack: Attack, defend: Defend) -> StrategySummary {
+        StrategySummary {
+            attack: attack.strategy(),
+            defend: defend.strategy()
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+struct LossesSummary {
+    losses: Losses,
+    occurrences: u32
+}
+
+impl LossesSummary {
+    fn new(losses: Losses) -> LossesSummary {
+        LossesSummary {
+            losses,
+            occurrences: 1
+        }
+    }
+}
+
+use std::ops::Add;
+
+impl Add for Losses {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self {
+            defender: self.defender + other.defender,
+            attacker: self.attacker + other.attacker
+        }
+    }
+}
+
+impl Add<Losses> for LossesSummary {
+    type Output = Self;
+
+    fn add(self, other: Losses) -> Self {
+        Self {
+            losses: self.losses + other,
+            occurrences: self.occurrences + 1
+        }
+    }
+}
+
 fn main() {
+    use std::collections::HashMap;
+
+    let mut strategy_summaries  = HashMap::new();
+
     for attack in Attack::all().iter() {
         for defend in Defend::all().iter() {
             let outcome = decide(*attack, *defend);
             println!("{:?},{:?} -> {:?}", attack, defend, outcome);
+            let key = StrategySummary::new(*attack, *defend);
+            match strategy_summaries.get(&key) {
+                Some(summary) => {
+                    strategy_summaries.insert(key, *summary + outcome);
+                },
+                None => {
+                    strategy_summaries.insert(key, LossesSummary::new(outcome));
+                }
+            }
         }
     }
+    println!("{:?}", strategy_summaries);
 }
