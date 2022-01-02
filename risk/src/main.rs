@@ -117,10 +117,62 @@ fn decide(attack: Attack, defend: Defend) -> Losses {
                 }
             }
         },
-        _ => Losses {
+        Defend::WITH_TWO(defend_highest, defend_second_highest) => match attack {
+            Attack::WITH_ONE(attack_highest) => {
+                if defend_highest >= attack_highest {
+                    Losses {
                         defender: 0,
+                        attacker: 1
+                    }
+                }
+                else {
+                    Losses {
+                        defender: 1,
                         attacker: 0
                     }
+                }
+            },
+            Attack::WITH_TWO(attack_highest, attack_second_highest) => {
+                let mut attacker : u8 = 0;
+                let mut defender : u8 = 0;
+                if defend_highest >= attack_highest {
+                    attacker += 1;    
+                }
+                else {
+                    defender += 1;
+                }
+                if defend_second_highest >= attack_second_highest {
+                    attacker += 1;  
+                }
+                else {
+                    defender += 1;
+                }
+                Losses {
+                    attacker,
+                    defender
+                }
+            },
+            Attack::WITH_THREE(attack_highest, attack_second_highest, _) => {
+                let mut attacker : u8 = 0;
+                let mut defender : u8 = 0;
+                if defend_highest >= attack_highest {
+                    attacker += 1;    
+                }
+                else {
+                    defender += 1;
+                }
+                if defend_second_highest >= attack_second_highest {
+                    attacker += 1;  
+                }
+                else {
+                    defender += 1;
+                }
+                Losses {
+                    attacker,
+                    defender
+                }
+            }
+        }
     }
 }
 
