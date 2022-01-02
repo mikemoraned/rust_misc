@@ -31,21 +31,24 @@ enum Attack {
 impl Attack {
     fn all() -> Vec<Attack> {
         use Attack::*;
-        let mut all = vec![];        
+        let mut variations = vec![];        
         for first_dice in Dice::all().iter() {
-            all.push(WITH_ONE(*first_dice));
+            variations.push(WITH_ONE(*first_dice));
             for second_dice in Dice::all().iter() {
                 if first_dice >= second_dice {
-                    all.push(WITH_TWO(*first_dice, *second_dice));
+                    variations.push(WITH_TWO(*first_dice, *second_dice));
+                }
+                else {
+                    variations.push(WITH_TWO(*second_dice, *first_dice));
                 }
                 for third_dice in Dice::all().iter() {
-                    if first_dice >= second_dice && second_dice >= third_dice {    
-                        all.push(WITH_THREE(*first_dice, *second_dice, *third_dice));
-                    }         
+                    let mut all = vec![*first_dice, *second_dice, *third_dice];
+                    all.sort();
+                    variations.push(WITH_THREE(all[0], all[1], all[2]));
                 }
             }    
         }
-        all
+        variations
     }
 }
 
@@ -58,16 +61,19 @@ enum Defend {
 impl Defend {
     fn all() -> Vec<Defend> {
         use Defend::*;
-        let mut all = vec![];        
+        let mut variations = vec![];        
         for first_dice in Dice::all().iter() {
-            all.push(WITH_ONE(*first_dice));
+            variations.push(WITH_ONE(*first_dice));
             for second_dice in Dice::all().iter() {
                 if first_dice >= second_dice {
-                    all.push(WITH_TWO(*first_dice, *second_dice));
+                    variations.push(WITH_TWO(*first_dice, *second_dice));
+                }
+                else {
+                    variations.push(WITH_TWO(*second_dice, *first_dice));
                 }
             }    
         }
-        all
+        variations
     }
 }
 
