@@ -1,8 +1,8 @@
 
 #[derive(Copy, Clone, Debug)]
 struct Losses {
-    defender: u32,
-    attacker: u32
+    attacker: u32,
+    defender: u32
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -280,5 +280,11 @@ fn main() {
             }
         }
     }
-    println!("{:?}", strategy_summaries);
+    
+    for (summary, losses) in strategy_summaries.iter() {
+        let averages = format!("A: {:0.2}, D: {:0.2}", 
+            (losses.losses.attacker as f32) / (losses.occurrences as f32),
+            (losses.losses.defender as f32) / (losses.occurrences as f32));
+        println!("A: {:?}, D: {:?}, average losses: {}, losses: {:?}", summary.attack, summary.defend, averages, losses);
+    }
 }
