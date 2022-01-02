@@ -119,13 +119,7 @@ fn decide_dice(defend: Dice, attack: Dice) -> Losses {
 fn decide(attack: Attack, defend: Defend) -> Losses {
     match defend {
         Defend::WithOne(defend_highest) => match attack {
-            Attack::WithOne(attack_highest) => {
-                decide_dice(defend_highest, attack_highest)
-            },
-            Attack::WithTwo(attack_highest, _) => {
-                decide_dice(defend_highest, attack_highest)
-            },
-            Attack::WithThree(attack_highest, _, _) => {
+            Attack::WithOne(attack_highest) | Attack::WithTwo(attack_highest, _) | Attack::WithThree(attack_highest, _, _) => {
                 decide_dice(defend_highest, attack_highest)
             }
         },
@@ -133,10 +127,7 @@ fn decide(attack: Attack, defend: Defend) -> Losses {
             Attack::WithOne(attack_highest) => {
                 decide_dice(defend_highest, attack_highest)
             },
-            Attack::WithTwo(attack_highest, attack_second_highest) => {
-                decide_dice(defend_highest, attack_highest) + decide_dice(defend_second_highest, attack_second_highest)
-            },
-            Attack::WithThree(attack_highest, attack_second_highest, _) => {
+            Attack::WithTwo(attack_highest, attack_second_highest) | Attack::WithThree(attack_highest, attack_second_highest, _) => {
                 decide_dice(defend_highest, attack_highest) + decide_dice(defend_second_highest, attack_second_highest)
             }
         }
