@@ -302,7 +302,7 @@ fn main() {
     }
 
     println!(
-        "{: <10}| {: <20} | {: <20} | {: <20}",
+        "{: <15}| {: <20} | {: <20} | {: <20}",
         "", "attack: 3", "attack: 2", "attack: 1"
     );
     for (defend_strategy, title) in vec![(Strategy::WithTwo, "defend: 2"), (Strategy::WithOne, "defend: 1")].iter() {
@@ -313,15 +313,15 @@ fn main() {
         let attack_with_one_summary 
             = strategy_summaries.get(&StrategySummary::from_strategy(Strategy::WithOne, *defend_strategy)).unwrap();
         println!(
-            "{: <10}| occurrences: {: <7} | occurrences: {: <7} | occurrences: {: <7}",
+            "{: <15}| occurrences: {: <7} | occurrences: {: <7} | occurrences: {: <7}",
             title, 
             attack_with_three_summary.occurrences,
             attack_with_two_summary.occurrences,
             attack_with_one_summary.occurrences,
         );
         println!(
-            "{: <10}| {: <20} | {: <20} | {: <20}",
-            "", 
+            "{: >15}| {: <20} | {: <20} | {: <20}",
+            "avg loss: ", 
             average_losses(*attack_with_three_summary),
             average_losses(*attack_with_two_summary),
             average_losses(*attack_with_one_summary),
