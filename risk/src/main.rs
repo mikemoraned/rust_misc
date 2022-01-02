@@ -1,9 +1,10 @@
-enum Outcome {
-    RED_LOSE_TWO,
-    BLUE_LOSE_TWO,
-    BOTH_LOSE_ONE
+#[derive(Copy, Clone, Debug)]
+struct Losses {
+    defender: u8,
+    attacker: u8
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum Dice {
     ONE = 1,
     TWO = 2,
@@ -13,21 +14,121 @@ enum Dice {
     SIX = 6
 }
 
+impl Dice {
+    fn all() -> Vec<Dice> {
+        use Dice::*;
+        vec![ONE, TWO, THREE, FOUR, FIVE, SIX]
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
 enum Attack {
     WITH_THREE(Dice, Dice, Dice),
     WITH_TWO(Dice, Dice),
     WITH_ONE(Dice)
 }
 
+impl Attack {
+    fn all() -> Vec<Attack> {
+        use Attack::*;
+        let mut all = vec![];        
+        for first_dice in Dice::all().iter() {
+            all.push(WITH_ONE(*first_dice));
+            for second_dice in Dice::all().iter() {
+                if first_dice >= second_dice {
+                    all.push(WITH_TWO(*first_dice, *second_dice));
+                }
+                for third_dice in Dice::all().iter() {
+                    if first_dice >= second_dice && second_dice >= third_dice {    
+                        all.push(WITH_THREE(*first_dice, *second_dice, *third_dice));
+                    }         
+                }
+            }    
+        }
+        all
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
 enum Defend {
     WITH_TWO(Dice, Dice),
     WITH_ONE(Dice)
 }
 
-fn decide(attack: Attack, defend: Defend) -> Outcome {
-    Outcome::BLUE_LOSE_TWO
+impl Defend {
+    fn all() -> Vec<Defend> {
+        use Defend::*;
+        let mut all = vec![];        
+        for first_dice in Dice::all().iter() {
+            all.push(WITH_ONE(*first_dice));
+            for second_dice in Dice::all().iter() {
+                if first_dice >= second_dice {
+                    all.push(WITH_TWO(*first_dice, *second_dice));
+                }
+            }    
+        }
+        all
+    }
+}
+
+fn decide(attack: Attack, defend: Defend) -> Losses {
+    match defend {
+        Defend::WITH_ONE(defend_highest) => match attack {
+            Attack::WITH_ONE(attack_highest) => {
+                if defend_highest >= attack_highest {
+                    Losses {
+                        defender: 0,
+                        attacker: 1
+                    }
+                }
+                else {
+                    Losses {
+                        defender: 1,
+                        attacker: 0
+                    }
+                }
+            },
+            Attack::WITH_TWO(attack_highest, _) => {
+                if defend_highest >= attack_highest {
+                    Losses {
+                        defender: 0,
+                        attacker: 1
+                    }
+                }
+                else {
+                    Losses {
+                        defender: 1,
+                        attacker: 0
+                    }
+                }
+            },
+            Attack::WITH_THREE(attack_highest, _, _) => {
+                if defend_highest >= attack_highest {
+                    Losses {
+                        defender: 0,
+                        attacker: 1
+                    }
+                }
+                else {
+                    Losses {
+                        defender: 1,
+                        attacker: 0
+                    }
+                }
+            }
+        },
+        _ => Losses {
+                        defender: 0,
+                        attacker: 0
+                    }
+    }
 }
 
 fn main() {
-    println!("Hello, world!");
+    for attack in Attack::all().iter() {
+        for defend in Defend::all().iter() {
+            let outcome = decide(*attack, *defend);
+            println!("{:?},{:?} -> {:?}", attack, defend, outcome);
+        }
+    }
 }
